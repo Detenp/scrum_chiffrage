@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Vote;
+use App\Http\Controllers\GameController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,8 +18,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/create_player', function() {
-    return view('create_player');
+Route::get('/game_start', function() {
+    return view('game_start');
 });
 
-Route::post('/vote', [Vote::class, 'openPage']);
+Route::post('/join_game', [GameController::class, 'joinGame']);
+Route::post('/create_game', [GameController::class, 'createGame']);

@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Players;
+use App\Http\Controllers\PlayersAPIController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -19,7 +19,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('players', [Players::class, 'getAll']);
-Route::post('players', [Players::class, 'massUpdatePlayers']);
-Route::delete('players/{id}', [Players::class, 'deletePlayerById']);
-Route::post('players/{id}', [Players::class, 'updatePlayerById']);
+Route::get('players', [PlayersAPIController::class, 'getAll']);
+Route::post('players', [PlayersAPIController::class, 'massUpdatePlayers']);
+Route::delete('players/{id}', [PlayersAPIController::class, 'deletePlayerById']);
+Route::post('players/{id}', [PlayersAPIController::class, 'updatePlayerById']);
