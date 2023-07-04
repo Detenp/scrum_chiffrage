@@ -15,4 +15,8 @@ class GamesAPIController extends Controller
     function getGame(string $gameId) {
         return Game::find($gameId);
     }
+
+    function deleteGame(string $gameId) {
+        Game::destroy($gameId);
+    }
 }

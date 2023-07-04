@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Game;
 use App\Models\Player;
 use Illuminate\Http\Request;
 
@@ -13,6 +14,12 @@ class PlayersAPIController extends Controller
 
     function deletePlayerById(int $id) {
         Player::destroy($id);
+
+        $game = Game::where('game_master', $id)->first();
+
+        if ($game) {
+            $game->delete();
+        }
 
         return response('Player deleted.');
     }
