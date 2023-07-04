@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\GameViewController;
+use App\Http\Controllers\GamesAPIController;
 use App\Http\Controllers\PlayersAPIController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -23,3 +25,6 @@ Route::get('players', [PlayersAPIController::class, 'getAll']);
 Route::post('players', [PlayersAPIController::class, 'massUpdatePlayers']);
 Route::delete('players/{id}', [PlayersAPIController::class, 'deletePlayerById']);
 Route::post('players/{id}', [PlayersAPIController::class, 'updatePlayerById']);
+
+Route::get('games/{gameId}/players', [GamesAPIController::class, 'getAllPlayersForGame']);
+Route::get('games/{gameId}', [GamesAPIController::class, 'getGame']);

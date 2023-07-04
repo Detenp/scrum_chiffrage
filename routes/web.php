@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\GameController;
+use App\Http\Controllers\GameViewController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,5 +22,4 @@ Route::get('/game_start', function() {
     return view('game_start');
 });
 
-Route::post('/join_game', [GameController::class, 'joinGame']);
-Route::post('/create_game', [GameController::class, 'createGame']);
+Route::get('/game', [GameViewController::class, 'manageGameView']);

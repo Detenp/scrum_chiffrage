@@ -6,9 +6,19 @@ use App\Models\Game;
 use App\Models\Player;
 use Illuminate\Http\Request;
 
-class GameController extends Controller
+class GameViewController extends Controller
 {
-    function joinGame(Request $request) {
+    function manageGameView(Request $request) {
+        $create_or_join = $request->input('join_or_create');
+
+        if ($create_or_join == 'create') {
+            return $this->createGame($request);
+        } else if ($create_or_join == 'join') {
+            return $this->joinGame($request);
+        }
+    }
+
+    protected function joinGame(Request $request) {
         $room_code = $request->input('room_code');
         $name = $request->input('name');
 
@@ -18,27 +28,27 @@ class GameController extends Controller
             return view('game_start');
         }
 
-        $players = Player::all();
-
         $current_player = new Player();
         $current_player->name = $name;
         $current_player->vote = 0;
+        $current_player->game_id = $game->id;
 
         $current_player->save();
 
-        $players->add($current_player);
+        $players = Player::where('game_id', $game->id)->get();
 
         while($players->count() < 10) {
             $players->add(new Player());
         }
 
-        return view('game')
-            ->with('players', $players)
-            ->with('current_player', $current_player)
-            ->with('game', $game);
+        return view('game', [
+            'players' => $players,
+            'current_player' => $current_player,
+            'game' => $game
+        ]);
     }
 
-    function createGame(Request $request) {
+    protected function createGame(Request $request) {
         $room_code = $request->input('room_code');
         $name = $request->input('name');
 
@@ -63,9 +73,10 @@ class GameController extends Controller
 
         $game->save();
 
-        return view('game')
-            ->with('players', [$player])
-            ->with('current_player', $player)
-            ->with('game', $game);
+        return view('game', [
+                'players' => [$player],
+                'current_player' => $player,
+                'game' => $game
+            ]);
     }
 }

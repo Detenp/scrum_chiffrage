@@ -17,9 +17,10 @@
         function updateActivePlayers() {
             $.ajax({
                 type: "GET",
-                url: "http://localhost:8000/api/players",
+                url: "http://localhost:8000/api/games/{{ $game->id }}/players",
             }).done(function(data) {
                 activePlayers = data;
+                console.log(activePlayers);
             }).fail(function(data, err) {
                 console.log("fail " + JSON.stringify(data));
             });
@@ -76,7 +77,7 @@
             $.ajax({
                 type: "POST",
                 async: false,
-                url: "http://localhost:8000/api/players,
+                url: "http://localhost:8000/api/players",
                 data: activePlayers
             }).done(function(data) {
                 updateActivePlayers();
@@ -136,8 +137,11 @@
             <input type="text" name="player_vote" id="player_vote">
             <input type="submit" name="player_submit" value="Vote" onclick="playerVote()">
             <br>
-            <input type="submit" name="reset_votes" value="Reset Votes">
-            <input type="submit" name="reveal_votes" value="Reveal Votes">
+            @if ($current_player->id == $game->game_master)
+                <input type="submit" name="reset_votes" value="Reset Votes">
+                <input type="submit" name="reveal_votes" value="Reveal Votes">
+                <input type="submit" name="next_note" value="Next Note">
+            @endif
             <p>Votes average:</p>
             <p id="total_average">0</p>
         </div>
