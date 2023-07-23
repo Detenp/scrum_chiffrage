@@ -19,4 +19,23 @@ class GamesAPIController extends Controller
     function deleteGame(string $gameId) {
         Game::destroy($gameId);
     }
+
+    function postGame(Request $request, string $gameId) {
+        $game = Game::find($gameId);
+
+        if (!$game) {
+            return response('Not found', 404);
+        }
+
+        $requestContent = $request->all();
+
+        
+
+        if (key_exists('reveal', $requestContent)) {
+            $should_reveal = filter_var($requestContent['reveal'], FILTER_VALIDATE_BOOLEAN);
+            $game->reveal = $should_reveal;
+        }
+
+        $game->save();
+    }
 }

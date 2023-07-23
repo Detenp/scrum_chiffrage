@@ -6,12 +6,12 @@
 			  crossorigin="anonymous"></script>
 
     <script>
-        var activePlayers = []
+        var activePlayers = [];
+        var game = {};
 
         setInterval(function() {
             updateActivePlayers();
-            updateShownPlayers();
-            updateAverage();
+            updateGame();
         }, 3000);
 
         function updateActivePlayers() {
@@ -20,7 +20,8 @@
                 url: "http://localhost:8000/api/games/{{ $game->id }}/players",
             }).done(function(data) {
                 activePlayers = data;
-                console.log(activePlayers);
+                updateShownPlayers();
+                updateAverage();
             }).fail(function(data, err) {
                 console.log("fail " + JSON.stringify(data));
             });
@@ -47,10 +48,61 @@
             for (var i = 0; i < playersThatShouldBeAdded.length; i++) {
                 var playerToAdd = activePlayers.find(e => e.id == playersThatShouldBeAdded[i]);
 
-                var divToAdd = '<div name="player_' + playerToAdd.id + '"><p>name: ' +  playerToAdd.name + '</p><p>vote: ' + playerToAdd.vote + '</p></div>'
+                var divToAdd = printPlayerDiv(playerToAdd, !game.reveal);
 
                 playersList.append(divToAdd);
             }
+        }
+
+        function updateGame() {
+            $.ajax({
+                type: "GET",
+                url: "http://localhost:8000/api/games/{{ $game->id }}",
+            }).done(function(data) {
+                game = data;
+                console.log(game);
+            }).fail(function(data, err) {
+                console.log("fail " + JSON.stringify(data));
+            });
+        }
+
+        function updateVotesReveal() {
+            game.reveal = !game.reveal
+            $.ajax({
+                type: "POST",
+                url: "http://localhost:8000/api/games/{{ $game->id }}",
+                data: game
+            }).done(function(data) {
+                if (game.reveal) {
+                    revealVotes();
+                } else {
+                    hideVotes();
+                }
+            }).fail(function(data, err) {
+                console.log("fail " + JSON.stringify(data));
+            });
+        }
+
+        function revealVotes() {
+            var otherPlayersVotes = $('#foreign_player_vote');
+
+            for (var i = 0; i < otherPlayersVotes.length; i++) {
+                otherPlayersVotes[i].removeAttribute('hidden');
+            }
+            $("#total_average").attr('hidden', false);
+
+            $('#reveal_votes').val('Hide votes');
+        }
+
+        function hideVotes() {
+            var otherPlayersVotes = $('#foreign_player_vote');
+
+            for (var i = 0; i < otherPlayersVotes.length; i++) {
+                otherPlayersVotes[i].hidden = true;
+            }
+            $("#total_average").attr('hidden', true);
+
+            $('#reveal_votes').val('Reveal votes');
         }
 
         function updateAverage() {
@@ -62,23 +114,22 @@
 
             average = average / activePlayers.length;
 
-            console.log("average: " + average);
-
             $("#total_average").text(average);
         }
 
         function resetVotes() {
             updateActivePlayers();
 
+            var load = []
             for (var i = 0; i < activePlayers.length; i++) {
                 activePlayers[i].vote = 0;
+                load.push(JSON.stringify(activePlayers[i]))
             }
 
             $.ajax({
                 type: "POST",
-                async: false,
                 url: "http://localhost:8000/api/players",
-                data: activePlayers
+                data: load
             }).done(function(data) {
                 updateActivePlayers();
                 updateShownPlayers();
@@ -116,6 +167,14 @@
             });
         }
 
+        function printPlayerDiv(playerToAdd, isHidden) {
+            var toPrint = '<div name="player_' + playerToAdd.id + '"><p>name: ' +  playerToAdd.name + '</p><p id="foreign_player_vote"';
+            toPrint += isHidden ? 'hidden="true"' : "";
+            toPrint += '>vote: ' + playerToAdd.vote + '</p></div>'
+
+            return toPrint;
+        }
+
         window.addEventListener("beforeunload", function (e) {
             $.ajax({
                 type: "DELETE",
@@ -138,8 +197,8 @@
             <input type="submit" name="player_submit" value="Vote" onclick="playerVote()">
             <br>
             @if ($current_player->id == $game->game_master)
-                <input type="submit" name="reset_votes" value="Reset Votes">
-                <input type="submit" name="reveal_votes" value="Reveal Votes">
+                <input type="submit" name="reset_votes" value="Reset Votes" onclick="resetVotes()">
+                <input type="submit" id="reveal_votes" name="reveal_votes" value="Reveal Votes" onclick="updateVotesReveal()">
                 <input type="submit" name="next_note" value="Next Note">
             @endif
             <p>Votes average:</p>
@@ -150,7 +209,7 @@
                 @if ($player->id)
                     <div name="player_{{ $player->id }}">
                         <p>name: {{ $player->name }}</p>
-                        <p>vote: {{ $player->vote }}</p>
+                        <p id="foreign_player_vote" hidden="{{ $game->reveal }}">vote: {{ $player->vote }}</p>
                     </div>
                 @endif
             @endforeach

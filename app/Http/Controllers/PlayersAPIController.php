@@ -13,12 +13,14 @@ class PlayersAPIController extends Controller
     }
 
     function deletePlayerById(int $id) {
-        Player::destroy($id);
+        $player = Player::find($id);
 
-        $game = Game::where('game_master', $id)->first();
+        $game_players = Player::where('game_id', $player->game_id)->get();
 
-        if ($game) {
-            $game->delete();
+        $player->delete();
+
+        if (count($game_players) == 1) {
+            Game::destroy($player->game_id);
         }
 
         return response('Player deleted.');

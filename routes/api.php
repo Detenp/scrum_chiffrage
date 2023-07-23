@@ -29,3 +29,4 @@ Route::post('players/{id}', [PlayersAPIController::class, 'updatePlayerById']);
 Route::get('games/{gameId}/players', [GamesAPIController::class, 'getAllPlayersForGame']);
 Route::get('games/{gameId}', [GamesAPIController::class, 'getGame']);
 Route::delete('game/{gameId}', [GamesAPIController::class, 'deleteGame']);
+Route::post('games/{gameId}', [GamesAPIController::class, 'postGame']);
