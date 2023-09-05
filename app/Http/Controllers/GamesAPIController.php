@@ -13,7 +13,16 @@ class GamesAPIController extends Controller
     }
 
     function getGame(string $gameId) {
-        return Game::find($gameId);
+        $game = Game::find($gameId);
+        
+        if (!$game) {
+            return response('Not found', 404);
+        }
+
+        $players = Player::where('game_id', $gameId)->get();
+
+        $game->players = $players;
+        return $game;
     }
 
     function deleteGame(string $gameId) {

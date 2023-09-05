@@ -10,21 +10,12 @@
         var game = {};
 
         setInterval(function() {
-            updateActivePlayers();
             updateGame();
         }, 3000);
 
         function updateActivePlayers() {
-            $.ajax({
-                type: "GET",
-                url: "http://localhost:8000/api/games/{{ $game->id }}/players",
-            }).done(function(data) {
-                activePlayers = data;
-                updateShownPlayers();
-                updateAverage();
-            }).fail(function(data, err) {
-                console.log("fail " + JSON.stringify(data));
-            });
+            updateShownPlayers();
+            updateAverage();
         }
 
         function updateShownPlayers() {
@@ -60,27 +51,37 @@
                 url: "http://localhost:8000/api/games/{{ $game->id }}",
             }).done(function(data) {
                 game = data;
-                console.log(game);
+                activePlayers = game.players;
+                updateVotesShow();
+                updateShownPlayers();
+                updateAverage();
             }).fail(function(data, err) {
                 console.log("fail " + JSON.stringify(data));
             });
         }
 
-        function updateVotesReveal() {
+        function postVotesReveal() {
             game.reveal = !game.reveal
+            var message_target = $('#general_message');
+            message_target.text('Revealing votes...');
+            message_target.attr('hidden', false);
             $.ajax({
                 type: "POST",
                 url: "http://localhost:8000/api/games/{{ $game->id }}",
                 data: game
             }).done(function(data) {
-                if (game.reveal) {
-                    revealVotes();
-                } else {
-                    hideVotes();
-                }
+                message_target.attr('hidden', true);
             }).fail(function(data, err) {
                 console.log("fail " + JSON.stringify(data));
             });
+        }
+
+        function updateVotesShow() {
+            if (game.reveal) {
+                revealVotes();
+            } else {
+                hideVotes();
+            }
         }
 
         function revealVotes() {
@@ -89,7 +90,7 @@
             for (var i = 0; i < otherPlayersVotes.length; i++) {
                 otherPlayersVotes[i].removeAttribute('hidden');
             }
-            $("#total_average").attr('hidden', false);
+            $("#votes_average_div").attr('hidden', false);
 
             $('#reveal_votes').val('Hide votes');
         }
@@ -100,7 +101,7 @@
             for (var i = 0; i < otherPlayersVotes.length; i++) {
                 otherPlayersVotes[i].hidden = true;
             }
-            $("#total_average").attr('hidden', true);
+            $("#votes_average_div").attr('hidden', true);
 
             $('#reveal_votes').val('Reveal votes');
         }
@@ -118,9 +119,10 @@
         }
 
         function resetVotes() {
-            updateActivePlayers();
-
             var load = []
+            var message_target = $('#general_message');
+            message_target.text('Reseting votes...');
+            message_target.attr('hidden', false);
             for (var i = 0; i < activePlayers.length; i++) {
                 activePlayers[i].vote = 0;
                 load.push(JSON.stringify(activePlayers[i]))
@@ -131,9 +133,7 @@
                 url: "http://localhost:8000/api/players",
                 data: load
             }).done(function(data) {
-                updateActivePlayers();
-                updateShownPlayers();
-                updateAverage();
+                message_target.attr('hidden', true);
             }).fail(function(data, err) {
                 console.log("fail " + JSON.stringify(data));
             });
@@ -155,12 +155,16 @@
         function playerVote() {
             var voteValue = $('#player_vote').val();
 
+            var message_target = $('#general_message');
+            message_target.attr('hidden', false);
+            message_target.text('Vote sent!');
             $.ajax({
                 type: "POST",
                 async: false,
                 url: "http://localhost:8000/api/players/" + {{ $current_player->id }},
                 data: '{"vote": ' + voteValue + '}'
             }).done(function(data) {
+                message_target.
                 console.log(data);
             }).fail(function(data, err) {
                 console.log("fail " + JSON.stringify(data));
@@ -193,16 +197,19 @@
         <div id="currentPlayer">
             <h1>Current Player: {{ $current_player->name }}</h1>
             <h2>Room code: {{ $game->id }}</h2>
-            <input type="text" name="player_vote" id="player_vote">
-            <input type="submit" name="player_submit" value="Vote" onclick="playerVote()">
+            <p>My vote: <input type="text" name="player_vote" id="player_vote">
+            <input type="submit" name="player_submit" value="Vote" onclick="playerVote()"></p>
             <br>
             @if ($current_player->id == $game->game_master)
                 <input type="submit" name="reset_votes" value="Reset Votes" onclick="resetVotes()">
-                <input type="submit" id="reveal_votes" name="reveal_votes" value="Reveal Votes" onclick="updateVotesReveal()">
+                <input type="submit" id="reveal_votes" name="reveal_votes" value="Reveal Votes" onclick="postVotesReveal()">
                 <input type="submit" name="next_note" value="Next Note">
             @endif
-            <p>Votes average:</p>
-            <p id="total_average">0</p>
+            <p id="general_message" hidden="true">Revealing votes...</p>
+            <div id="votes_average_div" hidden="true">
+                <p>Votes average:</p>
+                <p id="total_average">0</p>
+            </div>
         </div>
         <div id="playersList">
             @foreach ($players as $player)
